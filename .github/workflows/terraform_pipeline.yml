@@ -5,15 +5,97 @@ on:
       environment:
         description: 'Environment to deploy'
         required: true
-        default: 'main'
+        default: 'dev'
         type: choice
         options:
           - dev
           - stage
           - prod
   
-  env:
-    TERRAFORM_VERSION: '1.14.6'
+env:
+  TF_VERSION: '1.14.6'
   
-  permission:
+permissions:
+    id-token: write
+    contents: read
+jobs:
+    Terraform_code_check:
+      name: code check will start
+      runs-on: ubuntu-latest
+     
+      environment: ${{ github.event.inputs.environment }}
+
+      env:
+       TF_ACTIONS_WORKING_DIR: env/${{ github.event.inputs.environment }}
+
+      defaults:
+       run:
+        working-directory: ${{ env.TF_ACTIONS_WORKING_DIR }}
+
+      steps:
+
+       - name: checkout code
+         uses: actions/checkout@v4
+
+       - name: Scan for secrets using TruffleHog
+         uses: trufflesecurity/trufflehog@main
+       - name: Install TruffleHog    # If you want to save report of  trufflehog output
+         run: |
+              curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh | sh
+
+       - name: Run TruffleHog and save report
+         continue-on-error: true
+         run: |
+             mkdir -p reports/${{ github.event.inputs.environment }}
+              trufflehog filesystem . --results=verified,unknown \
+              > reports/${{ github.event.inputs.environment }}/trufflehog.txt 2>&1
+
+       - name: Terraform install
+         uses: hashicorp/setup-terraform@v4
+         with:
+          terraform_version: ${{ env.TF_VERSION }} 
+       - name: terraform fmt
+         run: |
+           terraform fmt -check -recursive -no-color \
+           > reports/${{ github.event.inputs.environment }}/terraform-fmt.txt 2>&1
+         continue-on-error: true
+       - name: Terraform init
+         run: |
+            terraform init -input=false \     
+            -backend-config=backend/${{ github.event.inputs.environment}}.hcl \
+              > reports/${{ github.event.inputs.environment }}/terraform-init.txt 2>&1  
+             
+              # The runner is non-interactive.There is no keyboard to provide answers.                             
+              # if Terraform asks a question, the pipeline will hang and eventually fail due to timeout.
+       
+       - name: Terraform validation
+         continue-on-error: true
+         run: |
+           terraform validate -no-color \
+           > reports/${{ github.event.inputs.environment }}/terraform-validation.txt 2>&1
+
+       - name: Setup lint
+         uses: terraform-linters/setup-tflint@v4
+      
+       - name: Run TFLint
+         continue-on-error: true
+         run: |
+           tflint --recursive \
+           > reports/${{ github.event.inputs.environment }}/terraform.tflinter.txt 2>&1
+
+       - name: Install tfsec
+         run: |
+          curl -s https://raw.githubusercontent.com/aquasecurity/tfsec/master/scripts/install_linux.sh | bash 
+
+          
+       - name: Run tfsec
+         continue-on-error: true
+         run: |
+          tfsec . --no-color \
+            > reports/${{ github.event.inputs.environment }}/tfsec.txt 2>&1
+       - name: Upload Reports
+         uses: actions/upload-artifact@v4
+         with:
+          name: terraform-reports-${{ github.event.inputs.environment }}
+          path: reports/${{ github.event.inputs.environment }}/
 
