@@ -1,1 +1,11 @@
-
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        default: 'main'
+        type: choice
+        options:
+          - staging
+          - production
