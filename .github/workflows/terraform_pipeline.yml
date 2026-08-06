@@ -61,9 +61,9 @@ jobs:
          continue-on-error: true
        - name: Terraform init
          run: |
-            terraform init -input=false \     
+            terraform init -input=false \
             -backend-config=backend/${{ github.event.inputs.environment}}.hcl \
-              > reports/${{ github.event.inputs.environment }}/terraform-init.txt 2>&1  
+              > reports/${{ github.event.inputs.environment }}/terraform-init.txt 2>&1
              
               # The runner is non-interactive.There is no keyboard to provide answers.                             
               # if Terraform asks a question, the pipeline will hang and eventually fail due to timeout.
