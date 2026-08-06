@@ -119,10 +119,10 @@ jobs:
        - name: Terraform Plan
          run: terraform plan -no-color -input=false \
                -out=tfplan \
-               > ../../reports/${{ github.event.inputs.environment }}-terraform-plan.txt 2>&1
+               > ../../reports/${{ github.event.inputs.environment }}/terraform-plan.txt 2>&1
          continue-on-error: true
        - name: Upload Reports
          uses: actions/upload-artifact@v4
          with:
           name: terraform-reports-${{ github.event.inputs.environment }}
-          path: ../../reports/${{ github.event.inputs.environment }}/
+          path: reports/${{ github.event.inputs.environment }}/
