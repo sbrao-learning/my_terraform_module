@@ -36,6 +36,11 @@ jobs:
 
        - name: checkout code
          uses: actions/checkout@v4
+       - name: Debug paths
+         run: |
+          pwd
+          ls -la
+          ls -la ../../backend || true
 
        - name: Scan for secrets using TruffleHog
          uses: trufflesecurity/trufflehog@main
@@ -47,7 +52,7 @@ jobs:
          continue-on-error: true
          run: |
              mkdir -p ../../reports/${{ github.event.inputs.environment }}
-              trufflehog filesystem . --results=verified,unknown \
+             trufflehog filesystem . --results=verified,unknown \
               > ../../reports/${{ github.event.inputs.environment }}/trufflehog.txt 2>&1
 
        - name: Terraform install
@@ -113,8 +118,8 @@ jobs:
             > ../../reports/${{ github.event.inputs.environment }}/checkov-report.txt 2>&1
        - name: Terraform Plan
          run: terraform plan -no-color -input=false \
-              -out=tfplan \
-              > ../../reports/${{ github.event.inputs.environment }}-terraform-plan.txt 2>&1
+               -out=tfplan \
+               > ../../reports/${{ github.event.inputs.environment }}-terraform-plan.txt 2>&1
          continue-on-error: true
        - name: Upload Reports
          uses: actions/upload-artifact@v4
