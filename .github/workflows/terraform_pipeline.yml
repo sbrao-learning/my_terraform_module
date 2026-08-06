@@ -48,7 +48,7 @@ jobs:
          run: |
              mkdir -p reports/${{ github.event.inputs.environment }}
               trufflehog filesystem . --results=verified,unknown \
-              > reports/${{ github.event.inputs.environment }}/trufflehog.txt 2>&1
+              > ../../reports/${{ github.event.inputs.environment }}/trufflehog.txt 2>&1
 
        - name: Terraform install
          uses: hashicorp/setup-terraform@v4
@@ -57,13 +57,13 @@ jobs:
        - name: terraform fmt
          run: |
            terraform fmt -check -recursive -no-color \
-           > reports/${{ github.event.inputs.environment }}/terraform-fmt.txt 2>&1
+           > ../../reports/${{ github.event.inputs.environment }}/terraform-fmt.txt 2>&1
          continue-on-error: true
        - name: Terraform init
          run: |
             terraform init -input=false \
-            -backend-config=backend/${{ github.event.inputs.environment}}.hcl \
-              > reports/${{ github.event.inputs.environment }}/terraform-init.txt 2>&1
+            -backend-config=../../backend/${{ github.event.inputs.environment}}.hcl \
+              > ../../reports/${{ github.event.inputs.environment }}/terraform-init.txt 2>&1
              
               # The runner is non-interactive.There is no keyboard to provide answers.                             
               # if Terraform asks a question, the pipeline will hang and eventually fail due to timeout.
@@ -72,7 +72,7 @@ jobs:
          continue-on-error: true
          run: |
            terraform validate -no-color \
-           > reports/${{ github.event.inputs.environment }}/terraform-validation.txt 2>&1
+           > ../../reports/${{ github.event.inputs.environment }}/terraform-validation.txt 2>&1
 
        - name: Setup lint
          uses: terraform-linters/setup-tflint@v4
@@ -81,7 +81,7 @@ jobs:
          continue-on-error: true
          run: |
            tflint --recursive \
-           > reports/${{ github.event.inputs.environment }}/terraform.tflinter.txt 2>&1
+           > ../../reports/${{ github.event.inputs.environment }}/terraform.tflinter.txt 2>&1
 
        - name: Install tfsec
          run: |
@@ -92,7 +92,7 @@ jobs:
          continue-on-error: true
          run: |
           tfsec . --no-color \
-            > reports/${{ github.event.inputs.environment }}/tfsec.txt 2>&1
+            > ../../reports/${{ github.event.inputs.environment }}/tfsec.txt 2>&1
 
        - name: Install Checkov
          run: pip install checkov
@@ -104,14 +104,14 @@ jobs:
           checkov -d . \
           --framework terraform \
           --output cli \
-            > reports/${{ github.event.inputs.environment }}/checkov-report.txt 2>&1
+            > ../../reports/${{ github.event.inputs.environment }}/checkov-report.txt 2>&1
        - name: Terraform Plan
          run: terraform plan -no-color -input=false \
               -out=tfplan \
-              > ${{ github.event.inputs.environment }}-terraform-plan.txt 2>&1
+              > ../../reports/${{ github.event.inputs.environment }}-terraform-plan.txt 2>&1
          continue-on-error: true
        - name: Upload Reports
          uses: actions/upload-artifact@v4
          with:
           name: terraform-reports-${{ github.event.inputs.environment }}
-          path: reports/${{ github.event.inputs.environment }}/
+          path: ../../reports/${{ github.event.inputs.environment }}/
