@@ -53,7 +53,7 @@ jobs:
        - name: Terraform install
          uses: hashicorp/setup-terraform@v4
          with:
-          terraform_version: ${{ env.TF_VERSION }} 
+          terraform_version: ${{ env.TF_VERSION }}
        - name: terraform fmt
          run: |
            terraform fmt -check -recursive -no-color \
@@ -85,7 +85,7 @@ jobs:
 
        - name: Install tfsec
          run: |
-          curl -s https://raw.githubusercontent.com/aquasecurity/tfsec/master/scripts/install_linux.sh | bash 
+          curl -s https://raw.githubusercontent.com/aquasecurity/tfsec/master/scripts/install_linux.sh | bash
 
           
        - name: Run tfsec
