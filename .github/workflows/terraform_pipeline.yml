@@ -93,9 +93,25 @@ jobs:
          run: |
           tfsec . --no-color \
             > reports/${{ github.event.inputs.environment }}/tfsec.txt 2>&1
+
+       - name: Install Checkov
+         run: pip install checkov
+
+       - name: Run Checkov and save report
+         continue-on-error: true
+         run: |
+
+          checkov -d . \
+          --framework terraform \
+          --output cli \
+            > reports/${{ github.event.inputs.environment }}/checkov-report.txt 2>&1
+       - name: Terraform Plan
+         run: terraform plan -no-color -input=false \
+              -out=tfplan \
+              > ${{ github.event.inputs.environment }}-terraform-plan.txt 2>&1
+         continue-on-error: true
        - name: Upload Reports
          uses: actions/upload-artifact@v4
          with:
           name: terraform-reports-${{ github.event.inputs.environment }}
           path: reports/${{ github.event.inputs.environment }}/
-
