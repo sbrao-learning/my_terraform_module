@@ -46,7 +46,7 @@ jobs:
        - name: Run TruffleHog and save report
          continue-on-error: true
          run: |
-             mkdir -p reports/${{ github.event.inputs.environment }}
+             mkdir -p ../../reports/${{ github.event.inputs.environment }}
               trufflehog filesystem . --results=verified,unknown \
               > ../../reports/${{ github.event.inputs.environment }}/trufflehog.txt 2>&1
 
